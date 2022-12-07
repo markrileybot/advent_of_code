@@ -1,5 +1,5 @@
 [package]
-name = "aoc_2020"
+name = "aoc_2022"
 version = "0.1.0"
 authors = ["Mark Riley <mark@eucleo.com>"]
 edition = "2018"

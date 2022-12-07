@@ -1,38 +1,13 @@
-use std::cell::{RefCell, RefMut};
-use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::iter::FromIterator;
-use std::rc::Rc;
-use std::slice::Iter;
 
 use anyhow::{bail, Result};
 use clap::{App, Arg};
-use colored::Colorize;
 
-type Link = Rc<RefCell<Node>>;
-
-struct Node {
-    value: char,
-    out_edges: Vec<Rc<RefCell<Node>>>,
-    in_edges: Vec<Rc<RefCell<Node>>>,
-}
-
-impl Node {
-    fn connect_out(&mut self, node: Link) {
-        self.out_edges.push(node);
-    }
-
-    fn connect_in(&mut self, node: Link) {
-        self.in_edges.push(node);
-    }
-
-    fn connect(node_from: Link, node_to: Link) {
-        node_from.borrow_mut().connect_in(node_to.clone());
-        node_to.borrow_mut().connect_out(node_from.clone());
-    }
-}
+mod d1;
+mod d2;
+mod d3;
+mod d4;
 
 trait DayRunnable {
     fn run(&self, file_name: &str, problem_id: usize) -> Result<()>;
@@ -129,43 +104,15 @@ fn main() -> Result<()> {
     let input_file_name = args.value_of("input").unwrap();
 
     let problems: Vec<Box<dyn DayRunnable>> = vec![
-        Box::new(Day::new_l(vec![d1_1, d1_2], |l| l)),
+        Box::new(Day::new_l(vec![d1::p1, d1::p2], |l| l)),
+        Box::new(Day::new_l(vec![d2::p1, d2::p2], |l| l)),
+        Box::new(Day::new_l(vec![d3::p1, d3::p2], |l| l)),
+        Box::new(Day::new_l(vec![d4::p1, d4::p2], |l| l)),
     ];
 
     if day < problems.len() {
         return problems[day].run(input_file_name, problem);
     } else {
-        bail!("Invalid day {}", day);
-    }
-}
-
-fn d1_1(inputs: &Vec<String>) {
-    let elf_totals = parse_d1(inputs);
-    match elf_totals.iter().max() {
-        Some(max) => println!( "Max value: {}", max ),
-        None      => println!( "Vector is empty" ),
-    }
-}
-
-fn parse_d1(inputs: &Vec<String>) -> Vec<u32> {
-    let mut elf_totals = Vec::new();
-    for x in inputs {
-        if x.is_empty() || elf_totals.is_empty() {
-            elf_totals.push(0);
-        } else {
-            let elf_idx = &elf_totals.len() - 1;
-            elf_totals[elf_idx] += x.parse::<u32>().unwrap();
-        }
-    }
-    elf_totals
-}
-
-fn d1_2(inputs: &Vec<String>) {
-    let mut elf_totals = parse_d1(inputs);
-    elf_totals.sort_by(|a,b|
-        if b > a { Ordering::Greater } else if a > b { Ordering::Less } else { Ordering::Equal });
-    println!("{}", elf_totals[0] + elf_totals[1] + elf_totals[2]);
-    for x in elf_totals {
-        println!("{}", x);
+        bail!("Invalid day {}", day + 1);
     }
 }
