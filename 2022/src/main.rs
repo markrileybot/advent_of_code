@@ -12,6 +12,7 @@ mod d5;
 mod d6;
 mod d7;
 mod d8;
+mod d9;
 
 trait DayRunnable {
     fn run(&self, file_name: &str, problem_id: usize) -> Result<()>;
@@ -116,6 +117,7 @@ fn main() -> Result<()> {
         Box::new(Day::new_l(vec![d6::p1, d6::p2], |l| l)),
         Box::new(Day::new_l(vec![d7::p1, d7::p2], |l| l)),
         Box::new(Day::new_l(vec![d8::p1, d8::p2], |l| l)),
+        Box::new(Day::new_l(vec![d9::p1, d9::p2], |l| l)),
     ];
 
     if day < problems.len() {
