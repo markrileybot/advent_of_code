@@ -213,7 +213,7 @@ fn p(inputs: &Vec<String>, num_knots: u8) -> Result<()> {
         for _ in 0..i {
             sleep(speed);
             map.mv(mv.clone(), 1);
-            render(&mut map, &mut w, x_scale, y_scale)?;
+            render(&map, &mut w, x_scale, y_scale)?;
         }
     }
     terminal::disable_raw_mode()?;
@@ -221,7 +221,7 @@ fn p(inputs: &Vec<String>, num_knots: u8) -> Result<()> {
 
     terminal::enable_raw_mode()?;
     queue!(w, cursor::Hide)?;
-    render(&mut map, &mut w, x_scale, y_scale)?;
+    render(&map, &mut w, x_scale, y_scale)?;
     execute!(w, cursor::MoveTo(0, height.min((map.grid_size.1 + 1) as u16)))?;
     queue!(w, cursor::Show)?;
     terminal::disable_raw_mode()?;
