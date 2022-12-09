@@ -165,6 +165,7 @@ fn p(inputs: &Vec<String>, num_knots: u8) {
         for (mv, i) in moves {
             map.mv(mv, i);
         }
+        println!("{}", map);
         println!("Tail visits: {}", map.visited.len());
     } else {
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
