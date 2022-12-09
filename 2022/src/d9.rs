@@ -163,7 +163,7 @@ fn p(inputs: &Vec<String>, num_knots: u8) {
     map.init(&moves);
     if moves.len() > 100 {
         for (mv, i) in moves {
-            map.mv(mv.clone(), i);
+            map.mv(mv, i);
         }
         println!("Tail visits: {}", map.visited.len());
     } else {
