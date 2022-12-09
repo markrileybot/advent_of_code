@@ -136,7 +136,7 @@ impl Map {
         for (x, y) in &self.visited {
             queue!(w, cursor::MoveTo((*x as f32 * x_scale) as u16, ((grid_height - *y) as f32 * y_scale) as u16), style::Print("#"))?;
         }
-        for (i, knot) in self.rope.iter().enumerate() {
+        for (i, knot) in self.rope.iter().enumerate().rev() {
             queue!(w, cursor::MoveTo((knot.0 as f32 * x_scale) as u16, ((grid_height - knot.1) as f32 * y_scale) as u16))?;
             if i == 0 {
                 queue!(w, style::SetForegroundColor(style::Color::Red), style::Print("H"))?;
