@@ -1,10 +1,20 @@
+use std::{io, result};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use std::io::{Stdout, Write};
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 
 use colored::Colorize;
+pub use crossterm::{
+    Command,
+    cursor,
+    event::{self, Event, KeyCode, KeyEvent}, execute, queue,
+    Result,
+    style, terminal::{self, ClearType},
+};
+use crossterm::style::Print;
 
 #[derive(Debug, Clone)]
 enum Direction {
@@ -35,7 +45,7 @@ impl Direction {
 
 impl FromStr for Direction {
     type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         return match s {
             "L" => Ok(Direction::Left),
             "R" => Ok(Direction::Right),
@@ -46,6 +56,7 @@ impl FromStr for Direction {
     }
 }
 
+#[derive(Clone)]
 struct Map {
     rope: Vec<(i32, i32)>,
     visited: HashSet<(i32,i32)>,
@@ -116,6 +127,27 @@ impl Map {
         }
         self.visited.insert(start_pos);
     }
+
+    fn cross_term_render<W>(&self, w: &mut W, x_scale: f32, y_scale: f32)  -> Result<()>
+        where W: Write {
+        let tail_idx = self.rope.len() - 1;
+        let grid_height = self.grid_size.1;
+        queue!(w, style::ResetColor, style::SetForegroundColor(style::Color::Magenta))?;
+        for (x, y) in &self.visited {
+            queue!(w, cursor::MoveTo((*x as f32 * x_scale) as u16, ((grid_height - *y) as f32 * y_scale) as u16), style::Print("#"))?;
+        }
+        for (i, knot) in self.rope.iter().enumerate() {
+            queue!(w, cursor::MoveTo((knot.0 as f32 * x_scale) as u16, ((grid_height - knot.1) as f32 * y_scale) as u16))?;
+            if i == 0 {
+                queue!(w, style::SetForegroundColor(style::Color::Red), style::Print("H"))?;
+            } else if i == tail_idx {
+                queue!(w, style::SetForegroundColor(style::Color::Green), style::Print("T"))?;
+            } else {
+                queue!(w, style::SetForegroundColor(style::Color::Yellow), style::Print(format!("{}", i)))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Display for Map {
@@ -144,7 +176,7 @@ impl Display for Map {
                     if self.visited.contains(&pos) {
                         write!(f, "{}", "#".bright_magenta()).unwrap();
                     } else {
-                        write!(f, "{}", ".".bright_white()).unwrap();
+                        write!(f, " ").unwrap();
                     }
                 }
             }
@@ -154,38 +186,61 @@ impl Display for Map {
     }
 }
 
-fn p(inputs: &Vec<String>, num_knots: u8) {
+fn p(inputs: &Vec<String>, num_knots: u8) -> Result<()> {
     let mut map = Map::new(num_knots);
     let moves = inputs.iter()
         .map(|s| s.split_once(' ').unwrap())
         .map(|(m, i) | (m.parse::<Direction>().unwrap(), i.parse::<i32>().unwrap()))
         .collect::<Vec<(Direction, i32)>>();
     map.init(&moves);
-    if moves.len() > 100 {
-        for (mv, i) in moves {
-            map.mv(mv, i);
-        }
-        println!("{}", map);
-        println!("Tail visits: {}", map.visited.len());
+    let speed = Duration::from_millis(if moves.len() > 1000 {
+        1
+    } else if moves.len() > 100 {
+        10
     } else {
-        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-        print!("{}", map);
-        for (mv, i) in moves {
-            for _ in 0..i {
-                sleep(Duration::from_millis(100));
-                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-                map.mv(mv.clone(), 1);
-                print!("{}", map);
-                println!("Tail visits: {}", map.visited.len());
-            }
+        100
+    });
+
+    let mut w = io::stdout();
+    execute!(w, terminal::EnterAlternateScreen)?;
+    terminal::enable_raw_mode()?;
+    let (width, height) = terminal::size()?;
+    let x_scale = (width as f32 / map.grid_size.0 as f32).min(1.0);
+    let y_scale = (height as f32 / map.grid_size.1 as f32).min(1.0);
+    queue!(w, cursor::Hide)?;
+    render(&mut map, &mut w, x_scale, y_scale)?;
+    for (mv, i) in moves {
+        for _ in 0..i {
+            sleep(speed);
+            map.mv(mv.clone(), 1);
+            render(&mut map, &mut w, x_scale, y_scale)?;
         }
     }
+    terminal::disable_raw_mode()?;
+    execute!(w, terminal::LeaveAlternateScreen)?;
+
+    terminal::enable_raw_mode()?;
+    queue!(w, cursor::Hide)?;
+    render(&mut map, &mut w, x_scale, y_scale)?;
+    execute!(w, cursor::MoveTo(0, height.min((map.grid_size.1 + 1) as u16)))?;
+    queue!(w, cursor::Show)?;
+    terminal::disable_raw_mode()?;
+    Ok(())
+}
+
+fn render(map: &Map, mut w: &mut Stdout, x_scale: f32, y_scale: f32) -> Result<()> {
+    let visited_len = map.visited.len();
+    queue!(w, style::ResetColor, terminal::Clear(ClearType::All))?;
+    queue!(w, style::ResetColor, cursor::MoveTo(0, 0), Print(format!("Tail visits: {}", visited_len)))?;
+    map.cross_term_render(&mut w, x_scale, y_scale)?;
+    w.flush()?;
+    Ok(())
 }
 
 pub fn p1(inputs: &Vec<String>) {
-    p(inputs, 2);
+    p(inputs, 2).unwrap();
 }
 
 pub fn p2(inputs: &Vec<String>) {
-    p(inputs, 10);
+    p(inputs, 10).unwrap();
 }
