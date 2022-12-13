@@ -1,9 +1,10 @@
-use std::io::{Stdout, Write};
+use std::io::Write;
 use std::io::stdout;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 
+use bytebuffer::ByteBuffer;
 pub use crossterm::{
     Command,
     cursor,
@@ -110,7 +111,7 @@ impl PathGraph {
         let mut min_len = u32::MAX as usize;
         let mut leader = None;
         for p in self.paths.iter()
-            .filter(|p| p.hit_target()) {
+            .filter(|p| !p.is_done() || p.hit_target()) {
             if p.points.len() < min_len {
                 min_len = p.points.len();
                 leader = Some(p);
@@ -243,7 +244,8 @@ impl FromStr for Map {
     }
 }
 
-fn render(map: &Map, graph: &PathGraph, w: &mut Stdout) -> Result<()> {
+fn render<W>(map: &Map, graph: &PathGraph, w: &mut W) -> Result<()>
+    where W: Write {
     let num_paths = graph.paths.len();
     let leader = graph.leader().map(|v| format!("{}", v)).unwrap_or("?".to_string());
     queue!(w, style::ResetColor, terminal::Clear(ClearType::All))?;
@@ -260,12 +262,12 @@ pub fn p1(inputs: &Vec<String>) {
         let mut graph = PathGraph::new(&map);
 
         let mut w = stdout();
-        execute!(w, terminal::EnterAlternateScreen)?;
+        execute!(w, terminal::EnterAlternateScreen, cursor::Hide)?;
         terminal::enable_raw_mode()?;
-        queue!(w, cursor::Hide)?;
 
         while !graph.advance(&mut map) {
             render(&map, &graph, &mut w)?;
+            w.flush()?;
             sleep(Duration::from_millis(5));
         }
 
@@ -274,6 +276,7 @@ pub fn p1(inputs: &Vec<String>) {
 
         terminal::enable_raw_mode()?;
         render(&map, &graph, &mut w)?;
+        w.flush()?;
         execute!(w, cursor::Show, cursor::MoveTo(0, (map.grid.len() + 1) as u16))?;
         terminal::disable_raw_mode()?;
         println!();
@@ -284,12 +287,13 @@ pub fn p1(inputs: &Vec<String>) {
 pub fn p2(inputs: &Vec<String>) {
     (|| -> Result<()> {
         let mut map = inputs.join("\n").parse::<Map>().unwrap();
+        let height = (map.grid.len() + 1) as u16;
 
         let mut w = stdout();
-        execute!(w, terminal::EnterAlternateScreen)?;
+        let mut b = ByteBuffer::new();
+        let mut a = ByteBuffer::new();
+        execute!(w, terminal::EnterAlternateScreen, cursor::Hide)?;
         terminal::enable_raw_mode()?;
-        queue!(w, cursor::Hide)?;
-
 
         let mut current_leader = u32::MAX as usize;
         for xy in map.get_starts() {
@@ -298,21 +302,28 @@ pub fn p2(inputs: &Vec<String>) {
             while !graph.advance(&mut map) {}
             if let Some(leader) = graph.leader() {
                 if leader < current_leader {
-                    render(&map, &graph, &mut w)?;
+                    b.clear();
+                    render(&map, &graph, &mut b)?;
                     current_leader = leader;
+                    w.write_all(b.as_bytes())?;
                 }
             }
             if let Some(t) = map.get_at(&xy) {
                 let height = char::from_u32(t.height as u32).unwrap_or('?');
-                queue!(w, cursor::MoveTo(xy.0 as u16, (xy.1 + 1) as u16))?;
-                queue!(w, style::SetForegroundColor(style::Color::Black), style::Print(format!("{}", height)))?;
-                w.flush()?;
+                queue!(a, cursor::MoveTo(xy.0 as u16, (xy.1 + 1) as u16))?;
+                queue!(a, style::SetForegroundColor(style::Color::Black), style::Print(format!("{}", height)))?;
+                w.write_all(a.as_bytes())?;
             }
         }
-        w.flush()?;
 
         terminal::disable_raw_mode()?;
-        execute!(w, terminal::LeaveAlternateScreen, cursor::Show)?;
+        execute!(w, terminal::LeaveAlternateScreen)?;
+
+        terminal::enable_raw_mode()?;
+        w.write_all(b.as_bytes())?;
+        w.write_all(a.as_bytes())?;
+        execute!(w, cursor::MoveTo(0, height), cursor::Show)?;
+        terminal::disable_raw_mode()?;
 
         println!("{}", current_leader);
         Ok(())
