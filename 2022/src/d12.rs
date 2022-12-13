@@ -259,62 +259,67 @@ fn render(map: &Map, graph: &PathGraph, w: &mut Stdout) -> Result<()> {
 }
 
 pub fn p1(inputs: &Vec<String>) {
-    let mut map = inputs.join("\n").parse::<Map>().unwrap();
-    let mut graph = PathGraph::new(&map);
+    (|| -> Result<()> {
+        let mut map = inputs.join("\n").parse::<Map>().unwrap();
+        let mut graph = PathGraph::new(&map);
 
-    let mut w = stdout();
-    execute!(w, terminal::EnterAlternateScreen).unwrap();
-    terminal::enable_raw_mode().unwrap();
-    queue!(w, cursor::Hide).unwrap();
+        let mut w = stdout();
+        execute!(w, terminal::EnterAlternateScreen)?;
+        terminal::enable_raw_mode()?;
+        queue!(w, cursor::Hide)?;
 
-    while !graph.advance(&mut map) {
-        render(&map, &graph, &mut w).unwrap();
-        sleep(Duration::from_millis(5));
-    }
+        while !graph.advance(&mut map) {
+            render(&map, &graph, &mut w)?;
+            sleep(Duration::from_millis(5));
+        }
 
-    terminal::disable_raw_mode().unwrap();
-    execute!(w, terminal::LeaveAlternateScreen).unwrap();
+        terminal::disable_raw_mode()?;
+        execute!(w, terminal::LeaveAlternateScreen)?;
 
-    terminal::enable_raw_mode().unwrap();
-    render(&map, &graph, &mut w).unwrap();
-    execute!(w, cursor::Show, cursor::MoveTo(0, (map.grid.len() + 1) as u16)).unwrap();
-    terminal::disable_raw_mode().unwrap();
-    println!();
+        terminal::enable_raw_mode()?;
+        render(&map, &graph, &mut w)?;
+        execute!(w, cursor::Show, cursor::MoveTo(0, (map.grid.len() + 1) as u16))?;
+        terminal::disable_raw_mode()?;
+        println!();
+        Ok(())
+    })().unwrap();
 }
 
 pub fn p2(inputs: &Vec<String>) {
-    let mut map = inputs.join("\n").parse::<Map>().unwrap();
+    (|| -> Result<()> {
+        let mut map = inputs.join("\n").parse::<Map>().unwrap();
 
-    let mut w = stdout();
-    execute!(w, terminal::EnterAlternateScreen).unwrap();
-    terminal::enable_raw_mode().unwrap();
-    queue!(w, cursor::Hide).unwrap();
+        let mut w = stdout();
+        execute!(w, terminal::EnterAlternateScreen)?;
+        terminal::enable_raw_mode()?;
+        queue!(w, cursor::Hide)?;
 
 
-    let mut current_leader = u32::MAX as usize;
-    for xy in map.get_starts() {
-        let mut graph = PathGraph::new(&map);
-        map = map.start_at(&xy);
-        while !graph.advance(&mut map) {
-        }
-        if let Some(leader) = graph.leader() {
-            if leader < current_leader {
-                render(&map, &graph, &mut w).unwrap();
-                current_leader = leader;
+        let mut current_leader = u32::MAX as usize;
+        for xy in map.get_starts() {
+            let mut graph = PathGraph::new(&map);
+            map = map.start_at(&xy);
+            while !graph.advance(&mut map) {}
+            if let Some(leader) = graph.leader() {
+                if leader < current_leader {
+                    render(&map, &graph, &mut w)?;
+                    current_leader = leader;
+                }
+            }
+            if let Some(t) = map.get_at(&xy) {
+                let height = char::from_u32(t.height as u32).unwrap_or('?');
+                queue!(w, cursor::MoveTo(xy.0 as u16, (xy.1 + 1) as u16))?;
+                queue!(w, style::SetForegroundColor(style::Color::Green), style::Print(format!("{}", height)))?;
+                w.flush()?;
             }
         }
-        if let Some(t) = map.get_at(&xy) {
-            let height = char::from_u32(t.height as u32).unwrap_or('?');
-            queue!(w, cursor::MoveTo(xy.0 as u16, (xy.1 + 1) as u16)).unwrap();
-            queue!(w, style::SetForegroundColor(style::Color::Green), style::Print(format!("{}", height))).unwrap();
-            w.flush().unwrap();
-        }
-    }
-    w.flush().unwrap();
+        w.flush()?;
 
-    terminal::disable_raw_mode().unwrap();
-    execute!(w, terminal::LeaveAlternateScreen, cursor::Show).unwrap();
+        terminal::disable_raw_mode()?;
+        execute!(w, terminal::LeaveAlternateScreen, cursor::Show)?;
 
-    println!("{}", current_leader);
+        println!("{}", current_leader);
+        Ok(())
+    })().unwrap();
 }
 
