@@ -11,3 +11,4 @@ clap = '2.33.3'
 colored = "2"
 anyhow = "1.0"
 crossterm = "0.25.0"
+bytebuffer = "2.0.1"
