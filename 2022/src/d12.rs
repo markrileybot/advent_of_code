@@ -149,17 +149,13 @@ struct Map {
 }
 
 impl Map {
-    fn start_at(self, start: &(i32, i32)) -> Self {
-        Self {
-            grid: self.grid.iter().map(|v| v.iter().map(|t| {
-                Tile {
-                    height: t.height,
-                    visited: false
-                }
-            }).collect()).collect(),
-            start_pos: start.clone(),
-            end_pos: self.end_pos
+    fn start_at(&mut self, start: &(i32, i32)) {
+        for row in self.grid.iter_mut() {
+            for t in row.iter_mut() {
+                t.visited = false;
+            }
         }
+        self.start_pos = start.clone();
     }
     fn get_starts(&self) -> Vec<(i32,i32)> {
         let lowest = 'a' as i32;
@@ -297,8 +293,8 @@ pub fn p2(inputs: &Vec<String>) {
 
         let mut current_leader = u32::MAX as usize;
         for xy in map.get_starts() {
+            map.start_at(&xy);
             let mut graph = PathGraph::new(&map);
-            map = map.start_at(&xy);
             while !graph.advance(&mut map) {}
             if let Some(leader) = graph.leader() {
                 if leader < current_leader {
@@ -309,7 +305,7 @@ pub fn p2(inputs: &Vec<String>) {
             if let Some(t) = map.get_at(&xy) {
                 let height = char::from_u32(t.height as u32).unwrap_or('?');
                 queue!(w, cursor::MoveTo(xy.0 as u16, (xy.1 + 1) as u16))?;
-                queue!(w, style::SetForegroundColor(style::Color::Green), style::Print(format!("{}", height)))?;
+                queue!(w, style::SetForegroundColor(style::Color::Black), style::Print(format!("{}", height)))?;
                 w.flush()?;
             }
         }
