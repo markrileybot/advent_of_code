@@ -30,9 +30,22 @@ enum DropState {
 
 struct Sand {
     pos: (i32, i32),
+    start: (i32, i32),
+    path: Vec<(i32,i32)>
 }
 
 impl Sand {
+    fn new(start: (i32,i32)) -> Self {
+        Self {
+            pos: start.clone(),
+            path: Vec::new(),
+            start
+        }
+    }
+    fn reset(&mut self) {
+        self.path.clear();
+        self.pos = self.start.clone()
+    }
     fn drop(&mut self, map: &mut Map) -> DropState {
         for next_pos in vec![
             (self.pos.0, self.pos.1 + 1),
@@ -40,7 +53,8 @@ impl Sand {
             (self.pos.0 + 1, self.pos.1 + 1)] {
             if let Some(t) = map.get_at_mut(&next_pos) {
                 if t.fill == Air {
-                    self.pos = next_pos;
+                    self.pos = next_pos.clone();
+                    self.path.push(next_pos);
                     return Falling;
                 } else if t.fill == Abyss {
                     t.fill = TileFill::Sand;
@@ -55,6 +69,19 @@ impl Sand {
             t.fill = TileFill::Sand;
         }
         return Resting;
+    }
+    fn render(&self, w: &mut Stdout, view_port: &Viewport) -> Result<()> {
+        for x in &self.path {
+            if view_port.contains(x) {
+                queue!(w, cursor::MoveTo((x.0 - view_port.x0) as u16, (x.1 - view_port.y0) as u16))?;
+                queue!(w, style::SetForegroundColor(style::Color::DarkRed), style::Print("▒"))?;
+            }
+        }
+        if view_port.contains(&self.pos) {
+            queue!(w, cursor::MoveTo((self.pos.0 - view_port.x0) as u16, (self.pos.1 - view_port.y0) as u16))?;
+            queue!(w, style::SetForegroundColor(style::Color::DarkRed), style::Print("▒"))?;
+        }
+        Ok(())
     }
 }
 
@@ -97,6 +124,10 @@ impl Viewport {
             self.y1 += off;
         }
     }
+
+    fn contains(&self, p: &(i32, i32)) -> bool {
+        p.0 >= self.x0 && p.0 <= self.x1 && p.1 >= self.y0 && p.1 <= self.y1
+    }
 }
 
 struct Tile {
@@ -106,17 +137,16 @@ struct Tile {
 struct Map {
     //    y   x
     grid: Vec<Vec<Tile>>,
-    start: (i32, i32),
 }
 
 
 impl Map {
 
     fn get_at_mut(&mut self, pos: &(i32, i32)) -> Option<&mut Tile> {
-        if pos.0 < self.start.0 || pos.1 < self.start.1 {
+        if pos.0 < 0 || pos.1 < 0 {
             None
-        } else if let Some(t) = self.grid.get_mut((pos.1 - self.start.1) as usize) {
-            t.get_mut((pos.0 - self.start.0) as usize)
+        } else if let Some(t) = self.grid.get_mut(pos.1 as usize) {
+            t.get_mut(pos.0 as usize)
         } else {
             None
         }
@@ -209,7 +239,7 @@ impl FromStr for Map {
             grid.push(row);
         }
 
-        let mut map = Map {grid, start: min};
+        let mut map = Map {grid};
 
         for v in walls {
             for i in 0..v.len() - 1 {
@@ -229,13 +259,14 @@ impl FromStr for Map {
     }
 }
 
-fn render(map: &mut Map, mut w: &mut Stdout, sand_count: &mut i32, view_port: &mut Viewport, done: bool) -> Result<()> {
+fn render(map: &Map, sand: &Sand, mut w: &mut Stdout, sand_count: &mut i32, view_port: &mut Viewport, done: bool) -> Result<()> {
     queue!(w, terminal::Clear(ClearType::All))?;
     queue!(w, style::ResetColor, cursor::MoveTo(0, 0), style::Print(format!("Sand: {}", sand_count)))?;
     if done {
         queue!(w, style::SetForegroundColor(style::Color::Cyan), cursor::MoveTo(0, 1), style::Print(format!("Scroll using ARROWs or ESC to quit!")))?;
     }
     map.render(&mut w, &view_port)?;
+    sand.render(&mut w, &view_port)?;
     w.flush()?;
     Ok(())
 }
@@ -249,9 +280,10 @@ pub fn p<T:BufRead>(inputs: T, p1: bool, render_every: i32) {
         terminal::enable_raw_mode()?;
         let terminal_size = terminal::size()?;
         let mut view_port = Viewport::new(terminal_size);
+        let mut sand = Sand::new((500, 0));
 
         loop {
-            let mut sand = Sand { pos: (500, 0) };
+            sand.reset();
             let mut drop_result;
 
             loop {
@@ -267,7 +299,7 @@ pub fn p<T:BufRead>(inputs: T, p1: bool, render_every: i32) {
 
             if sand_count % render_every == 0 {
                 view_port.shift(&sand.pos);
-                render(&mut map, &mut w, &mut sand_count, &mut view_port, false)?;
+                render(&map, &sand, &mut w, &mut sand_count, &mut view_port, false)?;
                 sleep(Duration::from_millis(10));
             }
 
@@ -276,7 +308,7 @@ pub fn p<T:BufRead>(inputs: T, p1: bool, render_every: i32) {
             }
         }
 
-        render(&mut map, &mut w, &mut sand_count, &mut view_port, true)?;
+        render(&map, &sand, &mut w, &mut sand_count, &mut view_port, true)?;
         loop {
             let event = read()?;
             view_port.shift_by(
@@ -295,14 +327,14 @@ pub fn p<T:BufRead>(inputs: T, p1: bool, render_every: i32) {
             if event == Event::Key(KeyCode::Esc.into()) {
                 break;
             }
-            render(&mut map, &mut w, &mut sand_count, &mut view_port, true)?;
+            render(&map, &sand, &mut w, &mut sand_count, &mut view_port, true)?;
         }
 
         terminal::disable_raw_mode()?;
         execute!(w, terminal::LeaveAlternateScreen)?;
 
         terminal::enable_raw_mode()?;
-        render(&mut map, &mut w, &mut sand_count, &mut view_port, false)?;
+        render(&map, &sand, &mut w, &mut sand_count, &mut view_port, false)?;
         execute!(w, cursor::MoveTo(0u16, (map.grid.len() + 2) as u16), cursor::Show)?;
         terminal::disable_raw_mode()?;
         Ok(())
