@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::io::BufRead;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -93,14 +94,15 @@ impl FromStr for Monkey {
     }
 }
 
-fn parse(inputs: &Vec<String>) -> Vec<Rc<RefCell<Monkey>>> {
-    inputs.chunks(7)
+fn parse<T:BufRead>(inputs: T) -> Vec<Rc<RefCell<Monkey>>> {
+    inputs.lines().map(|f| f.unwrap()).collect::<Vec<String>>()
+        .chunks(7)
         .map(|c| c.join("\n"))
         .map(|s| Rc::new(RefCell::new(s.parse::<Monkey>().unwrap())))
         .collect::<Vec<Rc<RefCell<Monkey>>>>()
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let monkeys = parse(inputs);
     for _ in 0..20 {
         for monkey in &monkeys {
@@ -118,7 +120,7 @@ pub fn p1(inputs: &Vec<String>) {
     println!("{}", monkey_business);
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let monkeys = parse(inputs);
     let worry_max = monkeys.iter()
         .map(|f| f.borrow().divisor)

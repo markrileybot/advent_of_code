@@ -2,6 +2,7 @@ use std::{io, result};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use std::io::{Stdout, Write};
+use std::io::BufRead;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -186,9 +187,11 @@ impl Display for Map {
     }
 }
 
-fn p(inputs: &Vec<String>, num_knots: u8) -> Result<()> {
+fn p<T:BufRead>(inputs: T, num_knots: u8) -> Result<()> {
     let mut map = Map::new(num_knots);
-    let moves = inputs.iter()
+    let moves = inputs.lines()
+        .map(|f| f.unwrap())
+        .collect::<Vec<String>>().iter()
         .map(|s| s.split_once(' ').unwrap())
         .map(|(m, i) | (m.parse::<Direction>().unwrap(), i.parse::<i32>().unwrap()))
         .collect::<Vec<(Direction, i32)>>();
@@ -237,10 +240,10 @@ fn render(map: &Map, mut w: &mut Stdout, x_scale: f32, y_scale: f32) -> Result<(
     Ok(())
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     p(inputs, 2).unwrap();
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     p(inputs, 10).unwrap();
 }

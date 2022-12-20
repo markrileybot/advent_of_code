@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::io::BufRead;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -49,11 +50,11 @@ const CMD_LS: &'static str = "$ ls";
 const DIR_ROOT: &'static str = "/";
 const DIR_UP: &'static str = "..";
 
-fn parse(inputs: &Vec<String>) -> Rc<RefCell<File>> {
+fn parse<T:BufRead>(inputs: T) -> Rc<RefCell<File>> {
     let root = Rc::new(RefCell::new(File {parent: None, children: Vec::new(), size: 0, name: "/".to_string()}));
     let mut listing = false;
     let mut dir = root.clone();
-    for x in inputs {
+    for x in inputs.lines().map(|f| f.unwrap()) {
         if x.starts_with(CMD_CD) {
             listing = false;
             let cd_dir = x[CMD_CD.len()..].trim();
@@ -89,7 +90,7 @@ fn parse(inputs: &Vec<String>) -> Rc<RefCell<File>> {
     return root;
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let root = parse(inputs);
     let mut accum = Vec::new();
     root.borrow().visit(&mut |f| {
@@ -107,7 +108,7 @@ pub fn p1(inputs: &Vec<String>) {
     println!("{}", total);
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let root = parse(inputs);
     let space_used = root.borrow().size();
     let space_needed = 30000000 - (70000000 - space_used);

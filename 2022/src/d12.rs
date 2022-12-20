@@ -1,5 +1,6 @@
-use std::io::Write;
+use std::io::BufRead;
 use std::io::stdout;
+use std::io::Write;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -256,9 +257,16 @@ fn render<W>(map: &Map, graph: &PathGraph, w: &mut W) -> Result<()>
     Ok(())
 }
 
-pub fn p1(inputs: &Vec<String>) {
+fn parse<T: BufRead>(inputs: T) -> Map {
+    inputs.lines()
+        .map(|f| f.unwrap())
+        .collect::<Vec<String>>().join("\n")
+        .parse::<Map>().unwrap()
+}
+
+pub fn p1<T:BufRead>(inputs: T) {
     (|| -> Result<()> {
-        let mut map = inputs.join("\n").parse::<Map>().unwrap();
+        let mut map = parse(inputs);
         let mut graph = PathGraph::new(&map);
 
         let mut w = stdout();
@@ -284,9 +292,9 @@ pub fn p1(inputs: &Vec<String>) {
     })().unwrap();
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     (|| -> Result<()> {
-        let mut map = inputs.join("\n").parse::<Map>().unwrap();
+        let mut map = parse(inputs);
         let height = (map.grid.len() + 1) as u16;
 
         let mut w = stdout();

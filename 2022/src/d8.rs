@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::io::BufRead;
 
 use colored::{Color, Colorize};
 
@@ -122,9 +123,9 @@ impl Tree {
 
 
 
-fn parse(inputs: &Vec<String>) -> Vec<Rc<RefCell<Tree>>> {
+fn parse<T:BufRead>(inputs: T) -> Vec<Rc<RefCell<Tree>>> {
     let mut forest: Vec<Rc<RefCell<Tree>>> = Vec::new();
-    for (row, s) in inputs.iter().enumerate() {
+    for (row, s) in inputs.lines().map(|f| f.unwrap()).enumerate() {
         let row_size = s.len();
         for (col, h) in s.chars().enumerate() {
             let new_tree = Rc::new(RefCell::new(Tree {
@@ -147,7 +148,7 @@ fn parse(inputs: &Vec<String>) -> Vec<Rc<RefCell<Tree>>> {
     forest
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let forest = parse(inputs);
     let mut visible_count = 0;
     for x in &forest {
@@ -161,7 +162,7 @@ pub fn p1(inputs: &Vec<String>) {
     println!("{}", visible_count);
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let forest = parse(inputs);
     let mut max_score = 0;
     for x in &forest {

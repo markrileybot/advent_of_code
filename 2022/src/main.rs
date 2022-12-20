@@ -16,67 +16,26 @@ mod d9;
 mod d10;
 mod d11;
 mod d12;
+mod d13;
+mod d14;
 
-trait DayRunnable {
-    fn run(&self, file_name: &str, problem_id: usize) -> Result<()>;
+trait Problem<T: BufRead> {
+    fn solve(&self, input: T);
 }
 
-trait InputParser<T> {
-    fn parse(&self, line: String, inputs: &mut Vec<T>);
+struct FuncyProblem<T: BufRead> {
+    func: fn(T)
 }
-
-struct LineParser<T> {
-    line_parser: fn(String) -> T,
-}
-
-impl <T> LineParser<T> {
-    fn new(line_parser: fn(String) -> T) -> LineParser<T> {
-        return LineParser {
-            line_parser
+impl <T:BufRead> FuncyProblem<T> {
+    fn new(func: fn(T)) -> Self {
+        Self {
+            func
         }
     }
 }
-
-impl <T> InputParser<T> for LineParser<T> {
-    fn parse(&self, line: String, inputs: & mut Vec<T>) {
-        inputs.push((self.line_parser)(line));
-    }
-}
-
-struct Day<T> {
-    input_parser: Box<dyn InputParser<T>>,
-    problems: Vec<fn(&Vec<T>)>,
-}
-
-impl <T: 'static> Day<T> {
-    fn new(problems: Vec<fn(&Vec<T>)>, input_parser: Box<dyn InputParser<T>>) -> Day<T> {
-        return Day {
-            problems,
-            input_parser
-        }
-    }
-
-    fn new_l(problems: Vec<fn(&Vec<T>)>, input_parser: fn(String) -> T) -> Day<T> {
-        return Day::new(problems, Box::new(LineParser::new(input_parser)));
-    }
-}
-
-impl <T> DayRunnable for Day<T> {
-    fn run(&self, file_name: &str, problem_id: usize) -> Result<()> {
-        let mut inputs: Vec<T> = Vec::new();
-        let file = File::open(file_name)?;
-        let lines = BufReader::new(file).lines();
-        for line in lines {
-            if let Ok(l) = line {
-                self.input_parser.parse(l, inputs.as_mut());
-            }
-        }
-
-        if problem_id < self.problems.len() {
-            self.problems[problem_id](&inputs);
-            return Ok(());
-        }
-        bail!("Invalid problem {}", problem_id);
+impl <T:BufRead> Problem<T> for FuncyProblem<T> {
+    fn solve(&self, input: T) {
+        (self.func)(input)
     }
 }
 
@@ -111,23 +70,30 @@ fn main() -> Result<()> {
     let problem = args.value_of("problem").unwrap().parse::<usize>().unwrap() - 1;
     let input_file_name = args.value_of("input").unwrap();
 
-    let problems: Vec<Box<dyn DayRunnable>> = vec![
-        Box::new(Day::new_l(vec![d1::p1, d1::p2], |l| l)),
-        Box::new(Day::new_l(vec![d2::p1, d2::p2], |l| l)),
-        Box::new(Day::new_l(vec![d3::p1, d3::p2], |l| l)),
-        Box::new(Day::new_l(vec![d4::p1, d4::p2], |l| l)),
-        Box::new(Day::new_l(vec![d5::p1, d5::p2], |l| l)),
-        Box::new(Day::new_l(vec![d6::p1, d6::p2], |l| l)),
-        Box::new(Day::new_l(vec![d7::p1, d7::p2], |l| l)),
-        Box::new(Day::new_l(vec![d8::p1, d8::p2], |l| l)),
-        Box::new(Day::new_l(vec![d9::p1, d9::p2], |l| l)),
-        Box::new(Day::new_l(vec![d10::p1, d10::p2], |l| l)),
-        Box::new(Day::new_l(vec![d11::p1, d11::p2], |l| l)),
-        Box::new(Day::new_l(vec![d12::p1, d12::p2], |l| l)),
+    let problems: Vec<Vec<FuncyProblem<BufReader<File>>>> = vec![
+        vec![FuncyProblem::new(d1::p1), FuncyProblem::new(d1::p2)],
+        vec![FuncyProblem::new(d2::p1), FuncyProblem::new(d2::p2)],
+        vec![FuncyProblem::new(d3::p1), FuncyProblem::new(d3::p2)],
+        vec![FuncyProblem::new(d4::p1), FuncyProblem::new(d4::p2)],
+        vec![FuncyProblem::new(d5::p1), FuncyProblem::new(d5::p2)],
+        vec![FuncyProblem::new(d6::p1), FuncyProblem::new(d6::p2)],
+        vec![FuncyProblem::new(d7::p1), FuncyProblem::new(d7::p2)],
+        vec![FuncyProblem::new(d8::p1), FuncyProblem::new(d8::p2)],
+        vec![FuncyProblem::new(d9::p1), FuncyProblem::new(d9::p2)],
+        vec![FuncyProblem::new(d10::p1), FuncyProblem::new(d10::p2)],
+        vec![FuncyProblem::new(d11::p1), FuncyProblem::new(d11::p2)],
+        vec![FuncyProblem::new(d12::p1), FuncyProblem::new(d12::p2)],
+        vec![FuncyProblem::new(d13::p1), FuncyProblem::new(d13::p2)],
+        vec![FuncyProblem::new(d14::p1), FuncyProblem::new(d14::p2)],
     ];
 
-    if day < problems.len() {
-        return problems[day].run(input_file_name, problem);
+    if let Some(day) = problems.get(day) {
+        if let Some(problem) = day.get(problem) {
+            problem.solve(BufReader::new(File::open(input_file_name)?));
+            return Ok(())
+        } else {
+            bail!("Invalid problem {}", problem + 1);
+        }
     } else {
         bail!("Invalid day {}", day + 1);
     }

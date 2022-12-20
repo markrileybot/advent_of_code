@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::io::BufRead;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -96,14 +97,15 @@ impl CPU {
 
 
 
-fn parse(inputs: &Vec<String>) -> CPU {
-    let program = inputs.iter()
+fn parse<T:BufRead>(inputs: T) -> CPU {
+    let program = inputs.lines()
+        .map(|f| f.unwrap())
         .map(|s| s.parse::<Op>().unwrap())
         .collect::<Vec<Op>>();
     CPU::new(program)
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let mut cpu = parse(inputs);
     let mut total_ss = 0;
     while cpu.tick() {
@@ -115,7 +117,7 @@ pub fn p1(inputs: &Vec<String>) {
     }
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let mut cpu = parse(inputs);
     let mut pixel_pos = 0;
     loop {

@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::io::BufRead;
 
 #[derive(Clone, Debug)]
 struct Stack {
@@ -31,11 +32,11 @@ impl Stack {
     }
 }
 
-fn parse(inputs: &Vec<String>) -> (HashMap<u8, RefCell<Stack>>, Vec<(u8, u8, u8)>) {
+fn parse<T:BufRead>(inputs: T) -> (HashMap<u8, RefCell<Stack>>, Vec<(u8, u8, u8)>) {
     let mut stacks = HashMap::new();
     let mut moves = Vec::new();
     let mut reading_stacks = true;
-    for x in inputs {
+    for x in inputs.lines().map(|f| f.unwrap()) {
         if !stacks.is_empty() && (x.trim().is_empty() || x.chars().nth(0).unwrap_or(' ') == ' ') {
             reading_stacks = false;
             continue;
@@ -63,7 +64,7 @@ fn parse(inputs: &Vec<String>) -> (HashMap<u8, RefCell<Stack>>, Vec<(u8, u8, u8)
     return (stacks, moves);
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let (stacks, moves) = parse(inputs);
     for mv in moves {
         if let Some(from) = stacks.get(&mv.1) {
@@ -79,7 +80,7 @@ pub fn p1(inputs: &Vec<String>) {
     println!();
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let (stacks, moves) = parse(inputs);
     for mv in moves {
         if let Some(from) = stacks.get(&mv.1) {

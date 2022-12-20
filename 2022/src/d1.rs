@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
+use std::io::BufRead;
 
-fn parse(inputs: &Vec<String>) -> Vec<u32> {
+fn parse<T:BufRead>(inputs: T) -> Vec<u32> {
     let mut elf_totals = Vec::new();
-    for x in inputs {
+    for x in inputs.lines().map(|v| v.unwrap()) {
         if x.is_empty() || elf_totals.is_empty() {
             elf_totals.push(0);
         } else {
@@ -13,7 +14,7 @@ fn parse(inputs: &Vec<String>) -> Vec<u32> {
     elf_totals
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let elf_totals = parse(inputs);
     match elf_totals.iter().max() {
         Some(max) => println!("Max value: {}", max),
@@ -21,7 +22,7 @@ pub fn p1(inputs: &Vec<String>) {
     }
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let mut elf_totals = parse(inputs);
     elf_totals.sort_by(|a, b|
         if b > a { Ordering::Greater } else if a > b { Ordering::Less } else { Ordering::Equal });

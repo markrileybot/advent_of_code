@@ -1,3 +1,4 @@
+use std::io::BufRead;
 
 struct Assignment {
     min: u32,
@@ -29,21 +30,23 @@ impl From<&str> for Assignment {
     }
 }
 
-fn parse(inputs: &Vec<String>) -> Vec<(Assignment, Assignment)> {
-    inputs.iter()
+fn parse<T:BufRead>(inputs: T) -> Vec<(Assignment, Assignment)> {
+    inputs.lines()
+        .map(|f| f.unwrap())
+        .collect::<Vec<String>>().iter()
         .map(|s| s.split_once(',').unwrap())
         .map(|s| (Assignment::from(s.0), Assignment::from(s.1)))
         .collect()
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let total = parse(inputs).iter()
         .filter(|a| a.0.contains(&a.1) || a.1.contains(&a.0))
         .count();
     println!("{}", total);
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let total = parse(inputs).iter()
         .filter(|a| a.0.intersects(&a.1) || a.1.intersects(&a.0))
         .count();

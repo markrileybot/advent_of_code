@@ -1,3 +1,4 @@
+use std::io::BufRead;
 
 #[derive(Clone, Debug)]
 enum RPS {
@@ -83,9 +84,9 @@ impl From<&str> for WLD {
     }
 }
 
-pub fn p1(inputs: &Vec<String>) {
+pub fn p1<T:BufRead>(inputs: T) {
     let mut score = 0;
-    for x in inputs {
+    for x in inputs.lines().map(|f| f.unwrap()) {
         let moves = x.split(" ").into_iter()
             .map(|s| RPS::from(s))
             .collect::<Vec<RPS>>();
@@ -96,9 +97,9 @@ pub fn p1(inputs: &Vec<String>) {
     println!("{}", score);
 }
 
-pub fn p2(inputs: &Vec<String>) {
+pub fn p2<T:BufRead>(inputs: T) {
     let mut score = 0;
-    for x in inputs {
+    for x in inputs.lines().map(|f| f.unwrap()) {
         if let Some((op, oc)) = x.split_once(" ") {
             let op_move: RPS = op.into();
             let outcome: WLD = oc.into();
