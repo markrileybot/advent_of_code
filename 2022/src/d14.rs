@@ -300,7 +300,7 @@ pub fn p<T:BufRead>(inputs: T, p1: bool, render_every: i32) {
             if sand_count % render_every == 0 {
                 view_port.shift(&sand.pos);
                 render(&map, &sand, &mut w, &mut sand_count, &mut view_port, false)?;
-                sleep(Duration::from_millis(10));
+                sleep(Duration::from_millis(5));
             }
 
             if drop_result == Abyssed || drop_result == Full {
@@ -346,5 +346,5 @@ pub fn p1<T:BufRead>(inputs: T) {
 }
 
 pub fn p2<T:BufRead>(inputs: T) {
-    p(inputs, false, 20);
+    p(inputs, false, 30);
 }
