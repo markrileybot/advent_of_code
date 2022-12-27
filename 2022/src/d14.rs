@@ -346,5 +346,5 @@ pub fn p1<T:BufRead>(inputs: T) {
 }
 
 pub fn p2<T:BufRead>(inputs: T) {
-    p(inputs, false, 30);
+    p(inputs, false, 40);
 }

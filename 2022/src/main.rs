@@ -18,6 +18,7 @@ mod d11;
 mod d12;
 mod d13;
 mod d14;
+mod d15;
 
 trait Problem<T: BufRead> {
     fn solve(&self, input: T);
@@ -85,6 +86,7 @@ fn main() -> Result<()> {
         vec![FuncyProblem::new(d12::p1), FuncyProblem::new(d12::p2)],
         vec![FuncyProblem::new(d13::p1), FuncyProblem::new(d13::p2)],
         vec![FuncyProblem::new(d14::p1), FuncyProblem::new(d14::p2)],
+        vec![FuncyProblem::new(d15::p1), FuncyProblem::new(d15::p2)],
     ];
 
     if let Some(day) = problems.get(day) {
