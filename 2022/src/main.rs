@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use anyhow::{bail, Result};
 use clap::{App, Arg};
 
 mod d1;
@@ -19,6 +18,8 @@ mod d12;
 mod d13;
 mod d14;
 mod d15;
+mod d16;
+mod d17;
 
 trait Problem<T: BufRead> {
     fn solve(&self, input: T);
@@ -40,7 +41,7 @@ impl <T:BufRead> Problem<T> for FuncyProblem<T> {
     }
 }
 
-fn main() -> Result<()> {
+fn main() {
 
     let args = App::new("Advent of Code 2021")
         .version("1.0")
@@ -87,16 +88,17 @@ fn main() -> Result<()> {
         vec![FuncyProblem::new(d13::p1), FuncyProblem::new(d13::p2)],
         vec![FuncyProblem::new(d14::p1), FuncyProblem::new(d14::p2)],
         vec![FuncyProblem::new(d15::p1), FuncyProblem::new(d15::p2)],
+        vec![FuncyProblem::new(d16::p1), FuncyProblem::new(d16::p2)],
+        vec![FuncyProblem::new(d17::p1), FuncyProblem::new(d17::p2)],
     ];
 
     if let Some(day) = problems.get(day) {
         if let Some(problem) = day.get(problem) {
-            problem.solve(BufReader::new(File::open(input_file_name)?));
-            return Ok(())
+            problem.solve(BufReader::new(File::open(input_file_name).unwrap()));
         } else {
-            bail!("Invalid problem {}", problem + 1);
+            panic!("Invalid problem {}", problem + 1);
         }
     } else {
-        bail!("Invalid day {}", day + 1);
+        panic!("Invalid day {}", day + 1);
     }
 }
