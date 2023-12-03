@@ -1,0 +1,4 @@
+[env]
+CUDA_ROOT = "/usr/lib/cuda"
+CUDA_LIBRARY_PATH = "/usr/lib/cuda"
+LLVM_CONFIG = "/opt/llvm/7.1.0/bin/llvm-config"
