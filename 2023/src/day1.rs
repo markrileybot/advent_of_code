@@ -34,7 +34,6 @@ pub(crate) fn day1() -> Result<()> {
 
     unsafe {
         launch!(
-            // slices are passed as two parameters, the pointer and the length.
             day1_kernel<<<grid_size, block_size, 0, stream>>>(
                 10usize, // chunk size
                 digits_buf.len(), // number of numbers
