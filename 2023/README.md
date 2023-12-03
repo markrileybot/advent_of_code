@@ -1,5 +1,10 @@
+AOC + CUDA + Rust
+=================
+
+Cause why not making adding numbers extra hard?
+
 Setup
-=====
+-----
 
 1. Install llvm `7`.  Yes you have to have 7.  I built from source:
     ```shell
