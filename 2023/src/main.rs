@@ -11,7 +11,7 @@ mod day2;
 
 #[macro_export]
 macro_rules! run {
-    ($( $x:expr ),*) => {
+    ($( $x:ident ),*) => {
         let ctx = Ctx::new()?;
         $(
             print!("{} ", stringify!($x));
