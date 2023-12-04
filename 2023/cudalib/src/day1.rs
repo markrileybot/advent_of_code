@@ -1,4 +1,4 @@
-use cuda_std::{kernel, thread, println};
+use cuda_std::{kernel, thread};
 use cuda_std::thread::sync_threads;
 
 #[kernel]

@@ -20,6 +20,7 @@ regex-syntax = "=0.6.28"
 thread_local = "=1.1.4"
 tracing-subscriber = "=0.3.17"
 anyhow = "1.0.75"
+aoc-2023-cudalib = { path = "./cudalib" }
 
 [build-dependencies]
 cuda_builder = "0.3.0"

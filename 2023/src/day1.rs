@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use cust::launch;
 use cust::memory::CopyDestination;
 use cust::prelude::SliceExt;
@@ -8,7 +8,7 @@ use crate::utils::Ctx;
 static INPUT: &str = include_str!("../input/day1.txt");
 
 
-pub(crate) fn day1_2() -> Result<()> {
+pub(crate) fn day1_2(ctx: &Ctx) -> Result<()> {
     let words = vec!["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
     let mut digits = INPUT.lines()
         .map(|l| {
@@ -42,10 +42,10 @@ pub(crate) fn day1_2() -> Result<()> {
 
             c0.1 * 10 + c1.1
         }).collect::<Vec<u32>>();
-    day1(&mut digits)
+    day1(ctx, &mut digits)
 }
 
-pub(crate) fn day1_1() -> Result<()> {
+pub(crate) fn day1_1(ctx: &Ctx) -> Result<()> {
     let mut digits = INPUT.lines()
         .map(|l| {
             let c0 = l.chars()
@@ -56,18 +56,17 @@ pub(crate) fn day1_1() -> Result<()> {
                 .last().unwrap_or('0').to_digit(10).unwrap();
             c0 * 10 + c1
         }).collect::<Vec<u32>>();
-    day1(&mut digits)
+    day1(ctx, &mut digits)
 }
 
-fn day1(mut digits: &mut Vec<u32>) -> Result<()> {
-    let ctx = Ctx::new()?;
+fn day1(ctx: &Ctx, mut digits: &mut Vec<u32>) -> Result<()> {
     let stream = &ctx.stream;
     let (day1_kernel, block_size) = ctx.load_kernel("day1")?;
     let grid_size = ((digits.len() / 10) as u32 + block_size - 1) / block_size;
     let expected = digits.iter().fold(0, |d0, d1| d0 + d1);
 
-    println!(
-        "using {} blocks and {} threads per block for {} digits expected {}",
+    print!(
+        "using {} blocks and {} threads per block for {} digits expected {} ",
         grid_size, block_size, digits.len(), expected
     );
 
