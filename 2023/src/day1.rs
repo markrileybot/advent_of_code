@@ -7,8 +7,19 @@ use crate::utils::Ctx;
 
 static INPUT: &str = include_str!("../input/day1.txt");
 
+pub(crate) fn day1(ctx: &Ctx) -> Result<(u32, u32)> {
+    let mut digits = INPUT.lines()
+        .map(|l| {
+            let c0 = l.chars()
+                .filter(|c| c.is_digit(10))
+                .next().unwrap_or('0').to_digit(10).unwrap();
+            let c1 = l.chars()
+                .filter(|c| c.is_digit(10))
+                .last().unwrap_or('0').to_digit(10).unwrap();
+            c0 * 10 + c1
+        }).collect::<Vec<u32>>();
+    let p1 = _day1(ctx, &mut digits)?;
 
-pub(crate) fn day1_2(ctx: &Ctx) -> Result<()> {
     let words = vec!["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
     let mut digits = INPUT.lines()
         .map(|l| {
@@ -42,24 +53,12 @@ pub(crate) fn day1_2(ctx: &Ctx) -> Result<()> {
 
             c0.1 * 10 + c1.1
         }).collect::<Vec<u32>>();
-    day1(ctx, &mut digits)
+    let p2 = _day1(ctx, &mut digits)?;
+
+    Ok((p1, p2))
 }
 
-pub(crate) fn day1_1(ctx: &Ctx) -> Result<()> {
-    let mut digits = INPUT.lines()
-        .map(|l| {
-            let c0 = l.chars()
-                .filter(|c| c.is_digit(10))
-                .next().unwrap_or('0').to_digit(10).unwrap();
-            let c1 = l.chars()
-                .filter(|c| c.is_digit(10))
-                .last().unwrap_or('0').to_digit(10).unwrap();
-            c0 * 10 + c1
-        }).collect::<Vec<u32>>();
-    day1(ctx, &mut digits)
-}
-
-fn day1(ctx: &Ctx, mut digits: &mut Vec<u32>) -> Result<()> {
+fn _day1(ctx: &Ctx, mut digits: &mut Vec<u32>) -> Result<u32> {
     let stream = &ctx.stream;
     let (day1_kernel, block_size) = ctx.load_kernel("day1")?;
     let grid_size = ((digits.len() / 10) as u32 + block_size - 1) / block_size;
@@ -86,6 +85,5 @@ fn day1(ctx: &Ctx, mut digits: &mut Vec<u32>) -> Result<()> {
 
     digits_buf.copy_to(&mut digits)?;
 
-    println!("{:?}", digits[0]);
-    Ok(())
+    Ok(digits[0])
 }

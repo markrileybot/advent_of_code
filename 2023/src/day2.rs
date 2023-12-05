@@ -11,19 +11,7 @@ use crate::utils::Ctx;
 
 static INPUT: &str = include_str!("../input/day2.txt");
 
-pub fn day2_1(ctx: &Ctx) -> Result<()> {
-    let (count, _power) = day2(ctx)?;
-    println!("{}", count);
-    Ok(())
-}
-
-pub fn day2_2(ctx: &Ctx) -> Result<()> {
-    let (_count, power) = day2(ctx)?;
-    println!("{}", power);
-    Ok(())
-}
-
-fn day2(ctx: &Ctx) -> Result<(u32, u32)> {
+pub fn day2(ctx: &Ctx) -> Result<(u32, u32)> {
     let games_vec = INPUT.lines()
         .map(|l| {
             l.split_once(":").unwrap().1.trim()
