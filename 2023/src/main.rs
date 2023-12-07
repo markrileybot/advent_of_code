@@ -3,6 +3,7 @@ use anyhow::Result;
 use crate::day1::day1;
 use crate::day2::day2;
 use crate::day3::day3;
+use crate::day4::day4;
 use crate::utils::Ctx;
 
 mod add;
@@ -10,6 +11,7 @@ mod day1;
 mod utils;
 mod day2;
 mod day3;
+mod day4;
 
 #[macro_export]
 macro_rules! run {
@@ -27,7 +29,8 @@ fn main() -> Result<()> {
     run!(
         day1,
         day2,
-        day3
+        day3,
+        day4
     );
     Ok(())
 }
