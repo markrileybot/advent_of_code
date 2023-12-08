@@ -1,6 +1,6 @@
 use core::str::FromStr;
 
-use cuda_std::{kernel, thread};
+use cuda_std::{kernel, shared_array, thread};
 use cuda_std::thread::sync_threads;
 use cust_core::DeviceCopy;
 

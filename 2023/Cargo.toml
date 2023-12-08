@@ -8,6 +8,7 @@ members = ["cudalib"]
 
 [dependencies]
 cust = "0.3.2"
+cuda_std = "0.2.2"
 
 byteorder = "=1.4.0"
 cc = "=1.0.78"

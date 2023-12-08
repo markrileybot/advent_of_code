@@ -26,6 +26,7 @@ dependencies = [
  "byteorder",
  "cc",
  "cuda_builder",
+ "cuda_std",
  "cust",
  "jobserver",
  "log",
